@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <!-- Bootstrap -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+            integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+        <script src="../static/index.js"></script>
+
+        <style>
+            .item:hover {
+                color: blue;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="jumbotron mt-3">
+                <h1>한국인이 좋아하는 인기 음원 작사 도우미</h1>
+                <p>당신의 영감을 적어주세요!</p>
+                <h3>2021년 멜론 top100<a href="https://xn--o39an51b2re.com/melon/yearlycount/2021">(링크)</a> 가사 단어 출현 횟수 top 10 </h3>
+                <p>1위. 내(255회), 난(173회), I(150회)</p>
+                <p>2위. you(137회), 널(129회), 너를(113회)</p>
+                <p>3위. oh(146회)</p>
+                <p>4위. like(86회) 5위. 또(69회) 다시(50회) 공동 6위(47회) Dun, 안, 봐 7위. in(46회) 8위. 보고(45회) 9위. 없는(44회) 10위. 왜(43회)</p>
+
+
+								<!-- Model list -->
+                <select id="model" style="margin-bottom: 10px;">
+                    <option value="gpt2-large">2021년 멜론 인기차트</option>
+                    <option value="gpt2-large">2020년, 2019년 : 준비중 ...</option>
+                </select>
+
+                <input type="radio" name="length" checked="checked" value="short">짧은 가사</input>
+                <input type="radio" name="length" value="long">긴 가사</input>
+
+                <textarea id="context" style="width:70%; height:40%; display: block; margin-bottom: 10px;"></textarea>
+
+                <b>Result</b>
+                <div id="select_box">
+                    <ul style="width:100%">
+                        <li class="item" onclick="concat(this.innerHTML)"></li>
+                        <li class="item" onclick="concat(this.innerHTML)"></li>
+                        <li class="item" onclick="concat(this.innerHTML)"></li>
+                        <li class="item" onclick="concat(this.innerHTML)"></li>
+                        <li class="item" onclick="concat(this.innerHTML)"></li>
+                    </ul>
+                </div>
+                <button id="btn_autocomplete" class="btn btn-primary" onclick="suggestion()">인기곡 작사하기!</button>
+                <p>곧 2020년, 2019년 버전이 출시됩니다!</p>
+
+                <h3>피아노 반주를 들으며 가사에 맞는 멜로디를 떠올릴 수 있어요</h3>
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/sOEvq3G7Rwo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+
+        </div>
+    </body>
+</html>
+
+<script>
+    // when click "Auto Complete!" button
+function suggestion() {
+    var textarea = document.getElementById("context");
+    var context = textarea.value;
+
+    var models = document.getElementById("model");
+    var model = models.options[models.selectedIndex].value;
+
+    var lengths = document.getElementsByName("length");
+    var length = '';
+    if (lengths[0].checked){
+        length = lengths[0].value;
+    }
+    else{
+        length = lengths[1].value;
+    }
+
+    var formData = new FormData();
+    formData.append("context", context );
+    formData.append("model", model);
+    formData.append("length", length);
+    fetch(
+        "/gpt2",
+        {
+            method: "POST",
+            body:formData
+        }
+    )
+    .then(response => {
+        if (response.status == 200){
+            return response
+        }
+        else{
+            throw Error("Failed");
+        }
+    })
+    .then(response => response.json())
+    .then(response => {
+        var items = document.getElementsByClassName("item");
+
+        for (let index = 0; index < items.length; index++) {
+            items[index].innerHTML = response[index];
+        }
+    })
+    .catch(e => {
+        var item = document.getElementsByClassName("item")[0];
+        item.innerHTML=e;
+    })
+}
+
+// Concatenate text and selected suggestion
+function concat(newText) {
+    var context = document.getElementById("context");
+    var text = context.value;
+    text += newText;
+
+    context.value = text;
+    clearSelect();
+}
+
+// Clear suggestion list
+function clearSelect() {
+    var items = document.getElementsByClassName("item");
+    for (let index = 0; index < items.length; index++) {
+        items[index].innerHTML = "";
+    }
+}
+</script>
